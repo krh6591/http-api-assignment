@@ -6,7 +6,67 @@
   
   <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.34/browser.min.js"></script>
   <script type="text/babel">
+    const titles = {
+      '200': 'Success',
+      '400': 'Bad Request',
+      '401': 'Unauthorized',
+      '403': 'Forbidden',
+      '500': 'Internal Server Error',
+      '501': 'Not Implemented',
+      '404': 'Resource Not Found'
+    }
+  
+    function handleResponse(xhr) {
+      const type = xhr.getResponseHeader('Content-Type');
+      const status = xhr.status.toString();
 
+      // Grab the content section and create needed elements
+      const content = document.querySelector("#content");
+      const h1 = document.createElement('h1');
+      const p = document.createElement('p');
+
+      // Handle JSON
+      if(type === 'application/json') {
+        const obj = JSON.parse(xhr.response);
+        
+        h1.textContent = titles[status];
+        p.textContent = `Message: ${obj.message}`;
+      }
+      // Handle XML
+      else if (type === 'text/xml') {
+        const message = xhr.responseXML.querySelector('message').textContent;
+
+        h1.textContent = titles[status];
+        p.textContent = `Message: ${message}`;
+      }
+
+      // Append the new elements
+      content.appendChild(h1);
+      content.appendChild(p);
+    };
+
+    function sendAjax(url, acceptType) {
+      const xhr = new XMLHttpRequest();
+      xhr.open('GET', url);
+      xhr.setRequestHeader ("Accept", acceptType);
+      xhr.onload = () => handleResponse(xhr);
+
+      xhr.send();
+    };
+
+    const init = () => {
+      document.querySelector('#send').addEventListener('click', () => {
+        const typeSelect = document.querySelector('#type');
+        const selectedType = typeSelect.options[typeSelect.selectedIndex].value;
+        
+        const pageSelect = document.querySelector('#page');
+        const selectedPage = pageSelect.options[pageSelect.selectedIndex].value;
+        
+        sendAjax(selectedPage, selectedType);
+      });
+    };
+
+    window.onload = init;
   </script>
 </head>
 <body>
